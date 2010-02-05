@@ -1,0 +1,18 @@
+Cappuccino: SIDecimal & SIDecimalNumber
+========================================
+(and SIDecimalNumberHandler and related tests)
+
+Announcing SIDecimal and SIDecimalNumber:
+
+(and SIDecimalNumberHandler and related tests)
+
+Decimal number support for the Cappuccino framework. A port of the NSDecimal
+and NSDecimalNumber classes from Cocoa via GNUStep i.e. SIDecimal is a port
+of the GNUStep implementation of NSDecimal. It is actually a loose port of
+GNUStep, i.e. quite a lot has been changed but the original inspirations are
+from it.
+
+See http://www.flat53.com/2009/09/28/cappuccino-CPDecimal-CPDecimalnumber/ for
+more details.
+
+Stephen Paul Ierodiaconou
