@@ -1,0 +1,138 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+	<title>stevegeek/SIDecimalNumber @ GitHub</title>
+	
+	<style type="text/css">
+		body {
+  		margin-top: 1.0em;
+  		background-color: #e4a921;
+		  font-family: "Helvetica,Arial,FreeSans"; 
+  		color: #000000;
+    }
+    #container {
+      margin: 0 auto;
+      width: 700px;
+    }
+		h1 { font-size: 3.8em; color: #1b56de; margin-bottom: 3px; }
+		h1 .small { font-size: 0.4em; }
+		h1 a { text-decoration: none }
+		h2 { font-size: 1.5em; color: #1b56de; }
+    h3 { text-align: center; color: #1b56de; }
+    a { color: #1b56de; }
+    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
+    .download { float: right; }
+		pre { background: #000; color: #fff; padding: 15px;}
+    hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
+    .footer { text-align:center; padding-top:30px; font-style: italic; }
+	</style>
+	
+</head>
+
+<body>
+  <a href="http://github.com/stevegeek/SIDecimalNumber"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
+  
+  <div id="container">
+
+    <div class="download">
+      <a href="http://github.com/stevegeek/SIDecimalNumber/zipball/master">
+        <img border="0" width="90" src="http://github.com/images/modules/download/zip.png"></a>
+      <a href="http://github.com/stevegeek/SIDecimalNumber/tarball/master">
+        <img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
+    </div>
+      
+    <h1><a href="http://github.com/stevegeek/SIDecimalNumber">SIDecimalNumber</a> 
+      <span class="small">by <a href="http://github.com/stevegeek">stevegeek</a></span></h1>
+
+    <div class="description">
+      A port of NSDecimalNumber and NSDecimal for Cappuccino
+    </div>
+
+    <p>Decimal number support for the Cappuccino framework. A port of the NSDecimal and NSDecimalNumber classes from Cocoa via GNUStep i.e. CPDecimal is a port of the GNUStep implementation of NSDecimal. It is actually a loose port of GNUStep, i.e. quite a lot has been changed but the original inspirations are from it.
+
+Below is a general overview of the CPDecimalNumber and then after that is information on the current State of the implementation (basically it still needs work which I will do over the next weeks hopefully!).
+
+I started this a while back but have recently returned to it to finish it for a project Im messing around with. It is rarely used in Cocoa I expect (though it should be used more!) so I’m not sure if it will ever fit within Cappuccino but its interesting to play with and learn.
+
+Read about decimal numbers here and why they are important:
+
+http://stackoverflow.com/questions/421463/should-i-use-nsdecimalnumber-to-deal-with-money
+
+http://speleotrove.com/decimal/
+
+Performance tests to come when optimisation begins but I can tell you now, its slow.
+
+(1) What is CPDecimalNumber:
+---------------------------------------------
+CPDecimalNumber  provides decimal floating point arithmetic. It guarantees accuracy up to 38 digits in the mantissa/coefficient and can handle numbers in the range:
+
++/- 99999999999999999999999999999999999999 x 10^(127/-128)
+
+Methods are available for: Addition, Subtraction, Multiplication, Division, Powers and Rounding.
+
+Exceptions are thrown on: Overflow, Underflow, Loss of Precision (rounding) and Divide by zero. (Note: the behaviour of the exceptions (e.g. if they fire or not) is controlled via the CPDecimalNumberHandler class)
+
+(2) Caveats (i.e. Warnings! and Status):
+---------------------------------------------------------
+The aim here is to try to produce the exact same output as Cocoa. However, this is effectively not possible but to get as close as possible we must perform our calculations in a way such that we even get the same rounding errors building up, say when computing large powers which require many multiplications. The code here almost matches the results of Cocoa but there are some small differences as outlined below:
+
+* Multiplication and Powers: To retain precision in the mantissa the result of the multiplication must be allowed to grow to double the size of the Max Digits (called longMode), hence the process takes longer but is much more accurate. However I could enable a switch to disable this to sacrifice some accuracy (by only ever dealing with at most Max Digits) but thus increase performance.  An example where small rounding error differences still occur: (0.875 ^ 101) results in: Cocoa:  0.00000(13893554059925661274821814636807535200)1  the 38 digits are bracketed, but notice the extra 39th digit (see below). CPDecimal: 0.00000(13893554059925661274821814636807535204) ... Difference: = 4e-41
+
+* This needs more testing! Some corner cases may still give inaccurate results. It will be stress tested.
+* This needs more testing! v.s. Cocoa but since Cocoa itself at edge cases will be inaccurate this is a bit of an inexact science.
+* Valid input string formats for numbers is taken from the JSON scientific notation valid formatting, which is not exactly what Cocoa does. This needs to be changed eventually to match exactly the input handling of Cocoa.
+* Rounding during division seems to be ignored in Cocoa (and in this implementation) which I find strange, I will look into this incase its a Cocoa bug.
+
+NSDecimalNumber uses a binary internal format for the mantissa (coefficient) hence the maximum it can store before truly losing precision is actually 2^128, which is a 39 digit number. After this Rounding and exponent changes occur. In our implementation where each digit is stored separately this would be impossible. Obviously Apple can only say precision is guaranteed to 38digits cause at some point in the 39 digits numbers rounding starts. Hence there will be a difference here between the implementations answers, though they both still provide the same 38digit guarantee.
+
+SO the actual range of NSDecimal is +/- 340282366920938463463374607431768211455 x 10^(127/-128) (Notice this is 39 digits)
+
+Locale Support: At the moment its sketchy to say the least. But its another thing to come.
+
+Some methods that are related to conversion of types are unimplemented as they mostly don’t make sense in JS anyway (as they don’t exist).
+
+(3) Optimisation To Come:
+--------------------------------------
+### Algorithmic: 
+The GNUStep code used O(n^2) algorithms for multiplication and division. Im not sure about division but there is definitely better order algorithms for multiplication, divide-and-conquer comes to mind.
+
+### Implementation: 
+The GNUStep code has some optimisations in the way it is written but a lot more could be done. Divide specifically is slow.
+
+### JS/OBJ-J level: 
+This is something in which Im new so Im learning but obviously the code could be written in slightly different ways to avoid unnecessary calls/cache values/use more efficient methods of objects etc.</p><h2>Dependencies</h2>
+<p>Cappuccino</p>
+<h2>Install</h2>
+<p>Add SIDecimal.j and SIDecimalNumber.j to Foundation/ and then rebuild Cappuccino</p>
+<h2>License</h2>
+<p>GNU Lesser General Public License</p>
+<h2>Authors</h2>
+<p>Stephen Ierodiaconou (stephen@flat53.com)<br/><br/>      </p>
+<h2>Contact</h2>
+<p>Stephen Ierodiaconou (stephen@flat53.com)<br/>      </p>
+
+
+    <h2>Download</h2>
+    <p>
+      You can download this project in either
+      <a href="http://github.com/stevegeek/SIDecimalNumber/zipball/master">zip</a> or
+      <a href="http://github.com/stevegeek/SIDecimalNumber/tarball/master">tar</a> formats.
+    </p>
+    <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
+      by running:
+      <pre>$ git clone git://github.com/stevegeek/SIDecimalNumber</pre>
+    </p>
+      
+    <div class="footer">
+      get the source code on GitHub : <a href="http://github.com/stevegeek/SIDecimalNumber">stevegeek/SIDecimalNumber</a>
+    </div>
+    
+  </div>
+
+  
+</body>
+</html>
